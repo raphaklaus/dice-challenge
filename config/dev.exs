@@ -6,6 +6,7 @@ config :naive_dice, NaiveDice.Repo,
   password: "postgres",
   database: "naive_dice_dev",
   hostname: "localhost",
+  port: 15432,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
