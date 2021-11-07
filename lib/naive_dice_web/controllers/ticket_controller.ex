@@ -15,9 +15,10 @@ defmodule NaiveDiceWeb.TicketController do
       # TODO: implement this
       remaining_tickets = 5
 
+
       # see https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html
       render(conn, "new.html", %{
-        changeset: Events.new_ticket_changeset(),
+        changeset: Events.new_ticket_changeset(event),
         event: event,
         remaining_tickets: remaining_tickets
       })
