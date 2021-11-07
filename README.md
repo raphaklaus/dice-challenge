@@ -1,5 +1,8 @@
 # NaiveDice
 
+## Requirements:
+  * direnv (installed by default in most distributions)
+
 To start your Phoenix server:
 
   * Install dependencies with `mix deps.get`
