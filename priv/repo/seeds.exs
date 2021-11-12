@@ -10,4 +10,4 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
-NaiveDice.Repo.insert!(%NaiveDice.Events.Event{title: "THE BEST EVER SHOW", allocation: 5})
+NaiveDice.Repo.insert!(%NaiveDice.Events.Event{title: "THE BEST EVER SHOW", allocation: 5, price: 10.00})
