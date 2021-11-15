@@ -19,7 +19,7 @@ defmodule NaiveDiceWeb.GuestController do
   Helper method which returns the system into the original state (useful for testing)
   """
   def reset_guests(conn, _params) do
-    # TODO: delete all tickets here.
+    NaiveDice.Events.remove_all_tickets()
 
     conn
     |> put_flash(:info, "All tickets deleted. Starting from scratch.")
