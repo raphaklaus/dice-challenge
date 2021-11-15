@@ -29,8 +29,11 @@ defmodule NaiveDice.Events.Ticket do
   @doc false
   def changeset(ticket, attrs \\ %{}) do\
     ticket
-    |> cast(attrs, [:user_name])
-    |> put_assoc(:event, attrs.event)
-    |> validate_required([:user_name, :event])
+    |> cast(attrs, [:user_name, :confirmed, :payment_id])
+    |> maybe_put_assoc(:event, attrs[:event])
+    |> validate_required([:user_name, :event, :payment_id])
   end
+
+  defp maybe_put_assoc(ticket, :event, nil), do: ticket
+  defp maybe_put_assoc(ticket, :event, event), do: put_assoc(ticket, :event, event)
 end
