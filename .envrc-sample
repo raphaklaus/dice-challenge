@@ -1,1 +1,1 @@
-STRIPE_SECRET=your-secret
+export STRIPE_SECRET=your-secret
