@@ -1,6 +1,7 @@
 defmodule NaiveDiceWeb.TicketController do
   use NaiveDiceWeb, :controller
   alias NaiveDice.Events
+  alias NaiveDice.Repo
 
   action_fallback(NaiveDiceWeb.FallbackController)
 
@@ -38,25 +39,28 @@ defmodule NaiveDiceWeb.TicketController do
   end
 
 
-  def success(conn, %{"id" => ticket_id}) do
+  def success(conn, %{"session_id" => session_id}) do
     # My TODO: There can be a vulnerability here ;)
 
-    ticket = NaiveDice.Events.get_ticket_by_id(ticket_id)
-    NaiveDice.Stripe.retrieve_session(ticket.payment_id)
+    session = NaiveDice.Stripe.retrieve_session(session_id)
 
-    render_success(ticket, conn)
+    if session_id == session.id do
+      ticket = NaiveDice.Events.get_by_payment_id(session.id)
+      |> Repo.preload(:event)
+
+      NaiveDice.Events.confirm_paid_ticket(ticket)
+      |> redirect_success(conn)
+    else
+      render(conn, "problem.html")
+    end
   end
 
-  defp render_success(%NaiveDice.Events.Ticket{confirmed: false}, conn) do
-    # update
-    IO.inspect "updating..."
+  defp redirect_success({:error, :check_available_tickets, _, _}, conn) do
+    render(conn, "sold_out_after_checkout.html")
+  end
+
+  defp redirect_success({:ok, _}, conn) do
     render(conn, "success.html")
-  end
-
-  defp render_success(_, conn) do
-    # update
-    IO.inspect "redirecting to home..."
-    redirect(conn, to: "/")
   end
 
   # defp maybe_redirect_to(conn, nil = _ticket), do: redirect(conn, "/")
@@ -78,15 +82,24 @@ defmodule NaiveDiceWeb.TicketController do
   def create(conn, %{"event_id" => event_id, "ticket" => %{"user_name" => user_name}}) do
     with {:ok, event} <- Events.get_event_by_id(event_id) do
       # TODO: implement reservation "the right way" - handle all edge cases!!!
-      {:ok, ticket} = Events.reserve_ticket(event, user_name)
+
       session = NaiveDice.Stripe.create_session(event)
 
-      # My TODO: check session in order to know if call was succeeded or not
+
+      Events.reserve_ticket(event, user_name, session.id)
+      |> redirect_create(conn)
 
       # TODO: I think a Ticket can represent both a pending reservation and a purchased ticket
       # but you may have a different opinion :-)
-      conn |> redirect(to: Routes.ticket_path(conn, :edit, ticket.id))
     end
+  end
+
+  defp redirect_create({:error, _, _, _}, conn) do
+    render(conn, "sold_out.html")
+  end
+
+  defp redirect_create({:ok, %{create_ticket: ticket}}, conn) do
+    redirect(conn, to: Routes.ticket_path(conn, :edit, ticket.id))
   end
 
   @doc """
