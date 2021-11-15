@@ -13,11 +13,15 @@ only <%= @remaining_tickets %> ticket(s) left
 </p>
 
 <br>
-<br>
-<br>
-<br>
 
 <%= form_for @changeset, Routes.event_ticket_path(@conn, :create, @event.id), fn f -> %>
+  <%= if @message != nil do %>
+    <p>There were some errors:</p>
+    <div class="alert alert-primary" role="alert">
+      <%= @message %>
+    </div>
+  <% end %>
+
   <div class="col-md-6 mb-3">
     <label>YOUR NAME </label>
     <br>
