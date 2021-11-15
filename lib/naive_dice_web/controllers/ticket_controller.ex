@@ -14,14 +14,13 @@ defmodule NaiveDiceWeb.TicketController do
   def new(conn, %{"event_id" => event_id}) do
     with {:ok, event} <- Events.get_event_by_id(event_id) do
       # TODO: implement this
-      remaining_tickets = 5
+      remaining_tickets = event.allocation - NaiveDice.Events.available_tickets(Repo, event)
 
-
-      # see https://hexdocs.pm/phoenix_html/Phoenix.HTML.Form.html
       render(conn, "new.html", %{
         changeset: Events.new_ticket_changeset(event),
         event: event,
-        remaining_tickets: remaining_tickets
+        remaining_tickets: remaining_tickets,
+        message: get_flash(conn, :message)
       })
     end
   end
@@ -87,18 +86,50 @@ defmodule NaiveDiceWeb.TicketController do
 
 
       Events.reserve_ticket(event, user_name, session.id)
-      |> redirect_create(conn)
+      |> redirect_create(conn, event)
 
       # TODO: I think a Ticket can represent both a pending reservation and a purchased ticket
       # but you may have a different opinion :-)
     end
   end
 
-  defp redirect_create({:error, _, _, _}, conn) do
+# #Ecto.Changeset<
+#    action: :insert,
+#    changes: %{
+#      event: #Ecto.Changeset<action: :update, changes: %{}, errors: [],
+#       data: #NaiveDice.Events.Event<>, valid?: true>,
+#      payment_id: "cs_test_a1El4KowFucYaKm1R98eOlmeLVGA5FvmXN1fFINuBGQXWbBhbzonJlDeJk",
+#      user_name: "back"
+#    },
+#    errors: [
+#      user_name: {"has already been taken",
+#       [constraint: :unique, constraint_name: "tickets_user_name_index"]}
+#    ],
+#    data: #NaiveDice.Events.Ticket<>,
+#    valid?: false
+#  >
+
+  defp redirect_create({:error, :create_ticket, %{errors: errors}, _}, conn, event) do
+    IO.inspect "what"
+    message = errors
+      |> Enum.map(fn {k, v} ->
+        {message, _} = v
+        "#{k}: #{message}."
+      end)
+      |> Enum.join("/n")
+
+    IO.inspect message
+
+    conn
+    |> put_flash(:message, message)
+    |> redirect(to: "/events/#{event.id}/tickets/new")
+  end
+
+  defp redirect_create({:error, :check_available_tickets, _, _}, conn, _) do
     render(conn, "sold_out.html")
   end
 
-  defp redirect_create({:ok, %{create_ticket: ticket}}, conn) do
+  defp redirect_create({:ok, %{create_ticket: ticket}}, conn, _) do
     redirect(conn, to: Routes.ticket_path(conn, :edit, ticket.id))
   end
 
@@ -116,7 +147,7 @@ defmodule NaiveDiceWeb.TicketController do
   Helper method which returns the system into the original state (useful for testing)
   """
   def reset_guests(conn, _params) do
-    # TODO: delete all tickets here.
+    NaiveDice.Events.remove_all_tickets()
 
     conn
     |> put_flash(:info, "All tickets deleted. Starting from scratch.")
