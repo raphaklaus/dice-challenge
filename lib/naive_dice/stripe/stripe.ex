@@ -1,21 +1,21 @@
 defmodule NaiveDice.Stripe do
   require Logger
-  def create_session(ticket) do
+  def create_session(event) do
     case Stripe.Session.create(%{
-      cancel_url: "http://localhost:4000/cancel",
+      cancel_url: "http://localhost:4000/ticket/cancel",
       payment_method_types: ["card"],
-      success_url: "http://localhost:4000/tickets/#{ticket.id}/success",
+      success_url: "http://localhost:4000/ticket/success?session_id={CHECKOUT_SESSION_ID}",
       line_items: [%{
-        amount: trunc(ticket.event.price * 100),
+        amount: trunc(event.price * 100),
         currency: "EUR",
-        name: ticket.event.title,
+        name: event.title,
         quantity: 1
       }]
     }) do
       {:ok, session} -> session
       {:error, error} ->
         Logger.critical("Stripe integration error: #{inspect(error)}")
-        %{url: nil}
+        %{url: nil, id: nil}
     end
   end
 
@@ -25,7 +25,7 @@ defmodule NaiveDice.Stripe do
       {:ok, session} -> session
       {:error, error} ->
         Logger.critical("Stripe integration error: #{inspect(error)}")
-        %{url: nil}
+        %{url: nil, id: nil}
     end
   end
 end
