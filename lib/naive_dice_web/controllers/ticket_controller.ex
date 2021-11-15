@@ -30,19 +30,44 @@ defmodule NaiveDiceWeb.TicketController do
   """
   def edit(conn, %{"id" => ticket_id}) do
     # TODO: implement this
-    with {:ok, ticket} <- Events.get_ticket_by_id(ticket_id) do
-      render(conn, "edit.html", %{ticket: ticket})
-    end
+    ticket = Events.get_ticket_by_id(ticket_id)
+
+    %{url: url} = NaiveDice.Stripe.retrieve_session(ticket.payment_id)
+
+    render(conn, "edit.html", %{ticket: ticket, checkout_url: url})
   end
+
+
+  def success(conn, %{"id" => ticket_id}) do
+    # My TODO: There can be a vulnerability here ;)
+
+    ticket = NaiveDice.Events.get_ticket_by_id(ticket_id)
+    NaiveDice.Stripe.retrieve_session(ticket.payment_id)
+
+    render_success(ticket, conn)
+  end
+
+  defp render_success(%NaiveDice.Events.Ticket{confirmed: false}, conn) do
+    # update
+    IO.inspect "updating..."
+    render(conn, "success.html")
+  end
+
+  defp render_success(_, conn) do
+    # update
+    IO.inspect "redirecting to home..."
+    redirect(conn, to: "/")
+  end
+
+  # defp maybe_redirect_to(conn, nil = _ticket), do: redirect(conn, "/")
 
   @doc """
   STEP 3: Renders the confirmation / receipt / thank you screen
   """
   def show(conn, %{"id" => ticket_id}) do
     # TODO: don't render a pending ticket as a successfully purchased one
-    with {:ok, ticket} <- Events.get_ticket_by_id(ticket_id) do
-      render(conn, "show.html", %{ticket: ticket})
-    end
+    ticket = Events.get_ticket_by_id(ticket_id)
+    render(conn, "show.html", %{ticket: ticket})
   end
 
   # TRANSITIONS BETWEEN WIZARD STEPS
@@ -54,6 +79,9 @@ defmodule NaiveDiceWeb.TicketController do
     with {:ok, event} <- Events.get_event_by_id(event_id) do
       # TODO: implement reservation "the right way" - handle all edge cases!!!
       {:ok, ticket} = Events.reserve_ticket(event, user_name)
+      session = NaiveDice.Stripe.create_session(event)
+
+      # My TODO: check session in order to know if call was succeeded or not
 
       # TODO: I think a Ticket can represent both a pending reservation and a purchased ticket
       # but you may have a different opinion :-)

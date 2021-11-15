@@ -12,6 +12,7 @@ defmodule NaiveDice.Events.Ticket do
   schema "tickets" do
     field :user_name, :string
     field :confirmed, :boolean
+    field :payment_id, :string
     belongs_to :event, NaiveDice.Events.Event
 
     timestamps()

@@ -29,12 +29,8 @@ defmodule NaiveDice.Events do
   end
 
   def get_ticket_by_id(ticket_id) do
-    case Repo.get(Ticket, ticket_id) do
-      nil ->
-        {:error, :not_found}
-
-      ticket ->
-        {:ok, ticket}
-    end
+    NaiveDice.Events.Ticket
+      |> NaiveDice.Repo.get(ticket_id)
+      |> NaiveDice.Repo.preload([:event])
   end
 end
