@@ -37,14 +37,16 @@ defmodule NaiveDice.Events do
     Ticket.changeset(%Ticket{}, %{event: event})
   end
 
-  def has_available_tickets?(repo, event) do
-    allocation = from(
+  def available_tickets(repo, event) do
+    from(
       t in Ticket,
       where: t.event_id == ^event.id and t.confirmed == true,
       select: count(t.id)
     ) |> repo.one()
+  end
 
-    IO.inspect allocation
+  def has_available_tickets?(repo, event) do
+    allocation = available_tickets(repo, event)
 
     if allocation >= 5, do: {:error, allocation}, else: {:ok, allocation}
   end
@@ -58,11 +60,16 @@ defmodule NaiveDice.Events do
     |> Multi.run(:check_available_tickets, fn repo, _ -> has_available_tickets?(repo, event) end)
     |> Multi.insert(:create_ticket, Ticket.changeset(%Ticket{}, %{user_name: user_name, event: event, payment_id: payment_id}))
     |> Repo.transaction()
+    |> IO.inspect
   end
 
   def get_ticket_by_id(ticket_id) do
     NaiveDice.Events.Ticket
       |> NaiveDice.Repo.get(ticket_id)
       |> NaiveDice.Repo.preload([:event])
+  end
+
+  def remove_all_tickets() do
+    Repo.delete_all(Ticket)
   end
 end
