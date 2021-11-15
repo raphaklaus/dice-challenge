@@ -24,7 +24,7 @@ defmodule NaiveDiceWeb.Router do
 
     # event_id is captured on a Ticket already - no need to have it in a route
     resources("/tickets", TicketController, only: [:edit, :update, :show])
-    get("/tickets/:id/success", TicketController, :success)
+    get("/ticket/success", TicketController, :success)
 
     resources("/guests", GuestController, only: [:index])
     delete "/guests/reset", GuestController, :reset_guests
