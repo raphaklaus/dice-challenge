@@ -32,7 +32,7 @@ defmodule NaiveDice.Events.Ticket do
     |> cast(attrs, [:user_name, :confirmed, :payment_id])
     |> unique_constraint(:user_name)
     |> maybe_put_assoc(:event, attrs[:event])
-    |> validate_required([:user_name, :event, :payment_id])
+    |> validate_required([:user_name, :event])
   end
 
   defp maybe_put_assoc(ticket, :event, nil), do: ticket
