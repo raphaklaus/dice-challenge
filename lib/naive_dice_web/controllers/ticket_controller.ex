@@ -88,7 +88,7 @@ defmodule NaiveDiceWeb.TicketController do
   end
 
   defp schedule_ticket_cleanup(ticket) do
-    expires_in = :timer.seconds(15)
+    expires_in = :timer.minutes(5)
     NaiveDice.TicketScheduler.Supervisor.start_child(%{ticket: ticket, expires_in: expires_in})
   end
 
