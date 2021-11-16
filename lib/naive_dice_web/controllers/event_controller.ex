@@ -2,6 +2,7 @@ defmodule NaiveDiceWeb.EventController do
   use NaiveDiceWeb, :controller
 
   alias NaiveDice.Events
+
   def index(conn, _params) do
     events = Events.list_all()
 

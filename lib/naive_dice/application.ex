@@ -13,7 +13,7 @@ defmodule NaiveDice.Application do
       # Start the endpoint when the application starts
       NaiveDiceWeb.Endpoint,
       {Registry, keys: :unique, name: NaiveDice.TicketScheduler},
-      NaiveDice.TicketScheduler.Supervisor,
+      NaiveDice.TicketScheduler.Supervisor
       # Starts a worker by calling: NaiveDice.Worker.start_link(arg)
       # {NaiveDice.Worker, arg},
     ]

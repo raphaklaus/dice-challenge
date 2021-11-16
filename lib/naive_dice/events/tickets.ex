@@ -12,7 +12,9 @@ defmodule NaiveDice.Tickets do
 
   def confirm_paid_ticket(ticket) do
     Multi.new()
-    |> Multi.run(:check_available_tickets, fn repo, _ -> has_available_tickets?(repo, ticket.event) end)
+    |> Multi.run(:check_available_tickets, fn repo, _ ->
+      has_available_tickets?(repo, ticket.event)
+    end)
     |> Multi.update(:ticket, Ticket.changeset(ticket, %{confirmed: true}))
     |> Repo.transaction()
     |> cancel_stale_ticket_removal()
@@ -27,8 +29,8 @@ defmodule NaiveDice.Tickets do
 
   def update_payment_id(ticket, payment_id) do
     ticket
-      |> Ticket.changeset(%{payment_id: payment_id})
-      |> Repo.update()
+    |> Ticket.changeset(%{payment_id: payment_id})
+    |> Repo.update()
   end
 
   def get_guests() do
@@ -36,28 +38,31 @@ defmodule NaiveDice.Tickets do
       t in Ticket,
       where: t.confirmed == true,
       select: t.user_name
-    ) |> Repo.all()
+    )
+    |> Repo.all()
   end
 
   def new_ticket_changeset(event) do
     Ticket.changeset(%Ticket{}, %{event: event})
   end
 
-
   def available_tickets(repo, event) do
     from(
       t in Ticket,
       where: t.event_id == ^event.id and t.confirmed == true,
       select: count(t.id)
-    ) |> repo.one()
+    )
+    |> repo.one()
   end
 
   def is_pending_ticket?(repo, ticket) do
-    result = from(
-      t in Ticket,
-      where: t.id == ^ticket.id and t.confirmed == false,
-      select: count(t.id)
-    ) |> repo.one()
+    result =
+      from(
+        t in Ticket,
+        where: t.id == ^ticket.id and t.confirmed == false,
+        select: count(t.id)
+      )
+      |> repo.one()
 
     if result == 1, do: {:ok, result}, else: {:error, result}
   end
@@ -71,7 +76,10 @@ defmodule NaiveDice.Tickets do
   def reserve_ticket(event, user_name) do
     Multi.new()
     |> Multi.run(:check_available_tickets, fn repo, _ -> has_available_tickets?(repo, event) end)
-    |> Multi.insert(:create_ticket, Ticket.changeset(%Ticket{}, %{user_name: user_name, event: event}))
+    |> Multi.insert(
+      :create_ticket,
+      Ticket.changeset(%Ticket{}, %{user_name: user_name, event: event})
+    )
     |> Repo.transaction()
   end
 
@@ -84,12 +92,12 @@ defmodule NaiveDice.Tickets do
 
   def get_ticket_by_id(ticket_id) do
     NaiveDice.Events.Ticket
-      |> NaiveDice.Repo.get(ticket_id)
-      |> NaiveDice.Repo.preload([:event])
+    |> NaiveDice.Repo.get(ticket_id)
+    |> NaiveDice.Repo.preload([:event])
   end
 
   def remove_all_tickets() do
     from(t in Ticket, where: t.confirmed == true)
-      |> Repo.delete_all
+    |> Repo.delete_all()
   end
 end

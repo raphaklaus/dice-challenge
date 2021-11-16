@@ -34,7 +34,6 @@ defmodule NaiveDiceWeb.TicketController do
 
     %{url: url, id: payment_id} = NaiveDice.Stripe.create_session(ticket)
 
-
     {:ok, ticket} = Tickets.update_payment_id(ticket, payment_id)
     schedule_ticket_cleanup(ticket)
 
@@ -67,7 +66,8 @@ defmodule NaiveDiceWeb.TicketController do
   end
 
   defp redirect_create({:error, :create_ticket, %{errors: errors}, _}, conn, event) do
-    message = errors
+    message =
+      errors
       |> Enum.map(fn {k, v} ->
         {message, _} = v
         "#{k}: #{message}."
@@ -96,8 +96,9 @@ defmodule NaiveDiceWeb.TicketController do
   Updates a ticket with the charge details and redirects to the confirmation / receipt / thank you
   """
   def update(conn, %{"session_id" => session_id}) do
-    ticket = Tickets.get_by_payment_id(session_id)
-    |> Repo.preload(:event)
+    ticket =
+      Tickets.get_by_payment_id(session_id)
+      |> Repo.preload(:event)
 
     Tickets.confirm_paid_ticket(ticket)
     |> redirect_show(conn)

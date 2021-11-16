@@ -27,7 +27,7 @@ defmodule NaiveDice.Events.Ticket do
           :invalid | %{optional(:__struct__) => none, optional(atom | binary) => any}
         ) :: Ecto.Changeset.t()
   @doc false
-  def changeset(ticket, attrs \\ %{}) do\
+  def changeset(ticket, attrs \\ %{}) do
     ticket
     |> cast(attrs, [:user_name, :confirmed, :payment_id])
     |> unique_constraint(:user_name)
